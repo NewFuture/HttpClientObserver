@@ -53,3 +53,7 @@ Don't log response body
 ```csharp
 NewFuture.HttpClientObserver.SubscribeAll(false);
 ```
+
+## compatible
+
+Only tested in Windows .NET 6.0, but it should work in other versions.
