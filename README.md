@@ -9,7 +9,7 @@ it logs all httpclient outbound into the diagnostic tools window.
 install with nuget
 
 ```bash
-Install-Package NewFuture.HttpClientObserver
+dotnet add package NewFuture.HttpClientObserver
 ```
 
 ## Usage
