@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Version>0.0.2</Version>
+    <PackageId>NewFuture.HttpClientObserver</PackageId>
+    <Authors>NewFuture</Authors>
+    <Company>Microsoft</Company>
+    <Description>Log Http Out-bound to the Diagnostics of the Applications</Description>
+
+    <TargetFramework>net6.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+  </PropertyGroup>
+
+</Project>
