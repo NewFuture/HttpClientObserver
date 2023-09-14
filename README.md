@@ -1,8 +1,10 @@
 # HttpClientObserver
 
-Diagnose your Http out-bound traffic with one line of code `NewFuture.HttpClientObserver.SubuscribeAll()`.
+Diagnose your Http out-bound traffic with one line of code `NewFuture.HttpClientObserver.SubscribeAll()`.
 
-it logs all httpclient outbound into the diagnostic tools window.
+It will log all `HttpClient` requests into the Diagnostic Tools Events view window.
+
+**Highly recommend to use it in debug mode only with `#if DEBUG`** for performance and security reasons.
 
 ## Installation
 
@@ -14,35 +16,40 @@ dotnet add package NewFuture.HttpClientObserver
 
 ## Usage
 
-`NewFuture.HttpClientObserver.SubuscribeAll();` will subscribe all httpclient response
+For example, you can add it to `Startup.cs` or `Program.cs` to subscribe all HttpClient events.
 
-For example, you can add it to `Startup.cs` or `Program.cs` to subscribe all httpclient response in debug mode
+### Arguments
+
+-   `logResponseBody`: log response content, default is `true`;
+-   `ignoreUris`: ignore uri list in regex, default is the common urls in `HttpClientObserver.DefaultIgnoreUrlList`.
+
+### Examples
+
+Basic usage
 
 ```csharp
+// in Startup.cs
+
 #if DEBUG
-// subscribe all httpclient response in debug mode
-NewFuture.HttpClientObserver.SubuscribeAll();
+// subscribe all HttpClient response in debug mode
+NewFuture.HttpClientObserver.SubscribeAll();
 #endif
 ```
 
-## arguments
-
--   logContent: log response content, default is `true`
--   ignoreUriList: ignore uri list in regex
-
-Examples
+Ignore some urls
 
 ```csharp
-// ignore uri list in regex
-NewFuture.HttpClientObserver.SubuscribeAll(ignoreUriList: new string[] { "http://localhost:5000/api/.*" });
-```
-
-```csharp
-// DefaultIngoreUrlList contains some common urls, you can add your own
-
-List<System.Text.RegularExpressions.Regex> ignoreList = new(HttpClientObserver.DefaultIngoreUrlList)
+// DefaultIgnoreUrlList contains some common urls, you can add your own
+List<Regex> ignoreList = new(HttpClientObserver.DefaultIgnoreUrlList)
 {
     new Regex("http://localhost.*")
 };
-HttpClientObserver.SubuscribeAll(logConent: true, ignoreUris: ignoreList);
+// ignore uri list in regex
+NewFuture.HttpClientObserver.SubscribeAll(ignoreUris: ignoreList);
+```
+
+Don't log response body
+
+```csharp
+NewFuture.HttpClientObserver.SubscribeAll(false);
 ```

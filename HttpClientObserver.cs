@@ -19,25 +19,25 @@ public class HttpClientObserver : IDisposable, IObserver<DiagnosticListener>
     /// <summary>
     /// the default ignore list application insights urls
     /// </summary>
-    public static readonly List<Regex> DefaultIngoreUrlList = new List<Regex>()
+    public static readonly List<Regex> DefaultIgnoreUrlList = new List<Regex>()
         {
             new Regex("https://rt\\.services\\.visualstudio\\.com/.*"),
             new Regex("https://dc\\.services\\.visualstudio\\.com/.*"),
         };
 
-    private IDisposable subscription;
-    private bool logContent = true;
-    private readonly IEnumerable<Regex> ignoreUris = null;
+    private IDisposable? subscription;
+    private readonly bool logContent = true;
+    private readonly IEnumerable<Regex>? ignoreUris = null;
 
     /// <summary>
     /// create a new instance of HttpClientObserver
-    /// prefer HttpClientObserver.SubuscribeAll
+    /// prefer HttpClientObserver.SubscribeAll
     /// </summary>
-    /// <param name="logConent"></param>
+    /// <param name="logResponseBody"></param>
     /// <param name="ignoreUris"></param>   
-    public HttpClientObserver(bool logConent, IEnumerable<Regex> ignoreUris)
+    public HttpClientObserver(bool logResponseBody, IEnumerable<Regex>? ignoreUris)
     {
-        this.logContent = logConent;
+        this.logContent = logResponseBody;
         this.ignoreUris = ignoreUris;
     }
 
@@ -45,12 +45,12 @@ public class HttpClientObserver : IDisposable, IObserver<DiagnosticListener>
     ///  subscribe all DiagnosticListener.
     ///  it should only be called in development environment.
     /// </summary>
-    /// <param name="logConent">whether log the content of the response.</param>
+    /// <param name="logResponseBody">whether log the content of the response.</param>
     /// <param name="ignoreUris">ignoreList the list of regex to ignore.</param>
     /// <returns>IDisposable</returns>
-    public static IDisposable SubuscribeAll(bool logConent = true, IEnumerable<Regex> ignoreUris = null)
+    public static IDisposable SubscribeAll(bool logResponseBody = true, IEnumerable<Regex>? ignoreUris = null)
     {
-        using HttpClientObserver observer = new HttpClientObserver(logConent, ignoreUris ?? DefaultIngoreUrlList);
+        using HttpClientObserver observer = new HttpClientObserver(logResponseBody, ignoreUris ?? DefaultIgnoreUrlList);
         return DiagnosticListener.AllListeners.Subscribe(observer);
     }
 
@@ -60,7 +60,8 @@ public class HttpClientObserver : IDisposable, IObserver<DiagnosticListener>
         if (value.Name == "HttpHandlerDiagnosticListener")
         {
             Debug.Assert(subscription == null, "should only subscribe once");
-            subscription = value.Subscribe(new HttpHandlerDiagnosticListener(this.logContent, this.ignoreUris));
+            var observer = new HttpHandlerDiagnosticListener(this.logContent, this.ignoreUris);
+            subscription = value.Subscribe(observer);
         }
     }
 
@@ -83,30 +84,30 @@ public class HttpClientObserver : IDisposable, IObserver<DiagnosticListener>
     /**
      * https://www.meziantou.net/observing-all-http-requests-in-a-dotnet-application.htm
      */
-    private sealed class HttpHandlerDiagnosticListener : IObserver<KeyValuePair<string, object>>
+    private sealed class HttpHandlerDiagnosticListener : IObserver<KeyValuePair<string, object?>>
     {
-        private static readonly Type activityStopData = Type.GetType("System.Net.Http.DiagnosticsHandler+ActivityStopData, System.Net.Http", throwOnError: false);
-        private static readonly PropertyInfo requestProperty = activityStopData.GetProperty("Request");
+        private static readonly Type? activityStopData = Type.GetType("System.Net.Http.DiagnosticsHandler+ActivityStopData, System.Net.Http", throwOnError: false);
+        private static readonly PropertyInfo? requestProperty = activityStopData?.GetProperty("Request");
 
-        private static readonly PropertyInfo responseProperty = activityStopData.GetProperty("Response");
+        private static readonly PropertyInfo? responseProperty = activityStopData?.GetProperty("Response");
 
         private readonly bool logContent;
 
-        private readonly IEnumerable<Regex> ignoreList;
+        private readonly IEnumerable<Regex>? ignoreList;
 
         /// <summary>
         /// The type is private, so we need to use reflection to access it.
         /// </summary>
-        private static HttpResponseMessage ResponseAccessor(object o)
+        private static HttpResponseMessage? ResponseAccessor(object? o)
         {
-            return (HttpResponseMessage)responseProperty?.GetValue(o);
+            return (HttpResponseMessage?)responseProperty?.GetValue(o);
         }
 
         /**
         * The maximum length of the content that can be written to the trace. total length of the trace is 4096 include prefix.
         * If the content is longer than this, it will be truncated.
         */
-        private static void LogReponseContent(HttpResponseMessage responseMessage)
+        private static void LogResponseContent(HttpResponseMessage? responseMessage)
         {
             const int MaxLogLength = 4000;
             if (responseMessage?.Content == null)
@@ -114,19 +115,19 @@ public class HttpClientObserver : IDisposable, IObserver<DiagnosticListener>
                 return;
             }
 
-            string logCategory = responseMessage.RequestMessage.RequestUri.ToString();
-            string content = responseMessage.Content.ReadAsStringAsync()?.Result;
-            string message = content.Length > MaxLogLength ? content.Substring(0, MaxLogLength) : content;
+            string? logCategory = responseMessage.RequestMessage?.RequestUri?.ToString();
+            string content = responseMessage.Content.ReadAsStringAsync()?.Result ?? "";
+            string message = content.Length > MaxLogLength ? content[..MaxLogLength] : content;
             Trace.WriteLine(message, logCategory);
         }
 
-        private static Uri GetReqestUri(object o)
+        private static Uri? GetRequestUri(object? o)
         {
-            HttpRequestMessage httpRequestMessage = (HttpRequestMessage)requestProperty?.GetValue(o);
+            HttpRequestMessage? httpRequestMessage = (HttpRequestMessage?)requestProperty?.GetValue(o);
             return httpRequestMessage?.RequestUri;
         }
 
-        public HttpHandlerDiagnosticListener(bool logContent = true, IEnumerable<Regex> ignoreList = null)
+        public HttpHandlerDiagnosticListener(bool logContent, IEnumerable<Regex>? ignoreList)
         {
             this.logContent = logContent;
             this.ignoreList = ignoreList;
@@ -140,20 +141,20 @@ public class HttpClientObserver : IDisposable, IObserver<DiagnosticListener>
         {
         }
 
-        public void OnNext(KeyValuePair<string, object> value)
+        public void OnNext(KeyValuePair<string, object?> value)
         {
-            if (value.Key == "System.Net.Http.HttpRequestOut.Stop" && !ShouldIgnore(GetReqestUri(value.Value)))
+            if (value.Key == "System.Net.Http.HttpRequestOut.Stop" && !ShouldIgnore(GetRequestUri(value.Value)))
             {
                 Trace.Write(value.Value, "HttpStop");
                 if (logContent)
                 {
                     var response = ResponseAccessor(value.Value);
-                    LogReponseContent(response);
+                    LogResponseContent(response);
                 }
             }
         }
 
-        private bool ShouldIgnore(Uri uri)
+        private bool ShouldIgnore(Uri? uri)
         {
             if (uri != null && ignoreList != null)
             {

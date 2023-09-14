@@ -1,11 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <Version>0.1.0</Version>
+    <Version>0.1.1</Version>
     <PackageId>NewFuture.HttpClientObserver</PackageId>
     <Authors>NewFuture</Authors>
     <Company>Microsoft</Company>
-    <Description>Diagnose your Http out-bound traffic with one line of code `NewFuture.HttpClientObserver.SubuscribeAll()`.</Description>
+    <Description>Diagnose your Http out-bound traffic with one line of code `NewFuture.HttpClientObserver.SubscribeAll()`.</Description>
     <RepositoryUrl>https://github.com/NewFuture/HttpClientObserver</RepositoryUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
