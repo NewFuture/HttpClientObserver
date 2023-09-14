@@ -1,15 +1,28 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <Version>0.0.2</Version>
+    <Version>0.1.0</Version>
     <PackageId>NewFuture.HttpClientObserver</PackageId>
     <Authors>NewFuture</Authors>
     <Company>Microsoft</Company>
-    <Description>Log Http Out-bound to the Diagnostics of the Applications</Description>
+    <Description>Diagnose your Http out-bound traffic with one line of code `NewFuture.HttpClientObserver.SubuscribeAll()`.</Description>
+    <RepositoryUrl>https://github.com/NewFuture/HttpClientObserver</RepositoryUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
 
     <TargetFramework>net6.0</TargetFramework>
     <Nullable>enable</Nullable>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\"/>
+    <None Include="LICENSE" Pack="true" PackagePath="\"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All"/>
+  </ItemGroup>
 
 </Project>
